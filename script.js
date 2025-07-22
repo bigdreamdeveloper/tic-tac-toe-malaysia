@@ -1,4 +1,3 @@
-// Elemen DOM
 const board = document.getElementById('board');
 const statusText = document.getElementById('status');
 const resetBtn = document.getElementById('resetBtn');
@@ -7,43 +6,21 @@ const startBtn = document.getElementById('startBtn');
 const gameDiv = document.getElementById('game');
 const setupDiv = document.getElementById('setup');
 const darkToggle = document.getElementById('darkToggle');
+const difficultyDisplay = document.getElementById('difficultyDisplay');
 
-const winCountEl = document.getElementById('winCount');
-const loseCountEl = document.getElementById('loseCount');
-const drawCountEl = document.getElementById('drawCount');
-const coinCountEl = document.getElementById('coinCount');
-
-// State
 let cells = Array(9).fill(null);
 let player = "🧋";
 let ai = "🍗";
 let gameActive = false;
 let selectedDifficulty = "easy";
 
-// Skor dari localStorage
-let score = {
-  win: parseInt(localStorage.getItem('win') || 0),
-  lose: parseInt(localStorage.getItem('lose') || 0),
-  draw: parseInt(localStorage.getItem('draw') || 0),
-  coin: parseInt(localStorage.getItem('coin') || 0),
-};
+const winConditions = [
+  [0,1,2],[3,4,5],[6,7,8],
+  [0,3,6],[1,4,7],[2,5,8],
+  [0,4,8],[2,4,6]
+];
 
-// Fungsi update UI skor
-function updateScoreDisplay() {
-  winCountEl.textContent = score.win;
-  loseCountEl.textContent = score.lose;
-  drawCountEl.textContent = score.draw;
-  coinCountEl.textContent = score.coin;
-}
-
-// Simpan skor
-function saveScore() {
-  for (const key in score) {
-    localStorage.setItem(key, score[key]);
-  }
-}
-
-// Dark Mode
+// DARK MODE SETUP
 if (localStorage.getItem('theme') === 'dark') {
   document.body.classList.add('dark-mode');
   darkToggle.checked = true;
@@ -59,17 +36,21 @@ darkToggle.addEventListener('change', () => {
   }
 });
 
-// Mula game
+// MULAKAN GAME
 startBtn.addEventListener('click', () => {
   selectedDifficulty = difficultySelect.value;
   setupDiv.style.display = "none";
   gameDiv.style.display = "block";
-  updateScoreDisplay();
+
+  const levelMap = {
+    easy: "Senang (Easy)",
+    medium: "Sederhana (Medium)",
+    hard: "Susah (Hard)"
+  };
+  difficultyDisplay.textContent = `Tahap AI: ${levelMap[selectedDifficulty]}`;
+
   startGame();
 });
-
-// Reset papan
-resetBtn.addEventListener('click', startGame);
 
 function startGame() {
   cells = Array(9).fill(null);
@@ -77,6 +58,8 @@ function startGame() {
   statusText.textContent = `Giliran: ${player}`;
   renderBoard();
 }
+
+resetBtn.addEventListener('click', startGame);
 
 function renderBoard() {
   board.innerHTML = '';
@@ -158,11 +141,7 @@ function minimax(boardState, depth, isMax) {
 }
 
 function checkWinner(p, customBoard = cells) {
-  return [
-    [0,1,2],[3,4,5],[6,7,8],
-    [0,3,6],[1,4,7],[2,5,8],
-    [0,4,8],[2,4,6]
-  ].some(([a, b, c]) => customBoard[a] === p && customBoard[b] === p && customBoard[c] === p);
+  return winConditions.some(([a, b, c]) => customBoard[a] === p && customBoard[b] === p && customBoard[c] === p);
 }
 
 function isDraw() {
@@ -172,20 +151,4 @@ function isDraw() {
 function endGame(message) {
   statusText.textContent = message;
   gameActive = false;
-
-  if (message.includes(player)) {
-    score.win++;
-    score.coin += 5;
-    confetti({ spread: 100, particleCount: 120, origin: { y: 0.6 } });
-  } else if (message.includes(ai)) {
-    score.lose++;
-  } else {
-    score.draw++;
-  }
-
-  saveScore();
-  updateScoreDisplay();
 }
-
-// ✅ Papar skor semasa masa load
-updateScoreDisplay();
