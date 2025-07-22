@@ -1,4 +1,4 @@
-// script.js for Tic Tac Teh Tarik 🇲🇾
+// ✅ script.js untuk Tic Tac Toe Malaysia Edition dengan butang Back & highlight tiles menang
 
 const board = document.getElementById('board');
 const statusText = document.getElementById('status');
@@ -8,24 +8,23 @@ const startBtn = document.getElementById('startBtn');
 const gameDiv = document.getElementById('game');
 const setupDiv = document.getElementById('setup');
 const darkToggle = document.getElementById('darkToggle');
+let backBtn;
 
 let cells = Array(9).fill(null);
 let player = "🧋";
 let ai = "🍗";
 let gameActive = false;
 let selectedDifficulty = "easy";
+let aiThinking = false;
 
-let winCount = 0;
-let loseCount = 0;
-let drawCount = 0;
-let coins = 0;
-
+let win = 0, lose = 0, draw = 0, coin = 0;
 const winConditions = [
   [0,1,2],[3,4,5],[6,7,8],
   [0,3,6],[1,4,7],[2,5,8],
   [0,4,8],[2,4,6]
 ];
 
+// Load dark mode from localStorage
 if (localStorage.getItem('theme') === 'dark') {
   document.body.classList.add('dark-mode');
   darkToggle.checked = true;
@@ -45,14 +44,28 @@ startBtn.addEventListener('click', () => {
   selectedDifficulty = difficultySelect.value;
   setupDiv.style.display = "none";
   gameDiv.style.display = "block";
-  statusText.textContent = `Giliran: ${player} (AI: ${selectedDifficulty.toUpperCase()})`;
+  addBackButton();
   startGame();
 });
+
+function addBackButton() {
+  if (!backBtn) {
+    backBtn = document.createElement('button');
+    backBtn.id = "backBtn";
+    backBtn.textContent = "← Tukar AI";
+    backBtn.addEventListener('click', () => {
+      gameDiv.style.display = "none";
+      setupDiv.style.display = "block";
+    });
+    gameDiv.insertBefore(backBtn, board);
+  }
+}
 
 function startGame() {
   cells = Array(9).fill(null);
   gameActive = true;
-  statusText.textContent = `Giliran: ${player} (AI: ${selectedDifficulty.toUpperCase()})`;
+  aiThinking = false;
+  statusText.textContent = `Giliran: ${player} (${selectedDifficulty})`;
   renderBoard();
 }
 
@@ -63,22 +76,23 @@ function renderBoard() {
   cells.forEach((val, idx) => {
     const cell = document.createElement('div');
     cell.classList.add('cell');
+    cell.dataset.index = idx;
     cell.textContent = val;
-    cell.addEventListener('click', () => playerMove(idx));
+    if (!val && !aiThinking && gameActive) {
+      cell.addEventListener('click', () => playerMove(idx));
+    }
     board.appendChild(cell);
   });
 }
 
 function playerMove(index) {
-  if (!gameActive || cells[index]) return;
+  if (!gameActive || cells[index] || aiThinking) return;
   cells[index] = player;
   renderBoard();
-
   if (checkWinner(player)) return endGame(`${player} menang! 🎉`, 'win');
   if (isDraw()) return endGame("Seri!", 'draw');
-
   statusText.textContent = `Giliran: ${ai}`;
-  gameActive = false; // Disable sementara AI fikir
+  aiThinking = true;
   setTimeout(botMove, 500);
 }
 
@@ -95,12 +109,10 @@ function botMove() {
   if (move !== null) {
     cells[move] = ai;
     renderBoard();
-
+    aiThinking = false;
     if (checkWinner(ai)) return endGame(`${ai} menang! 🤖`, 'lose');
     if (isDraw()) return endGame("Seri!", 'draw');
-
     statusText.textContent = `Giliran: ${player}`;
-    gameActive = true; // Boleh main balik
   }
 }
 
@@ -144,7 +156,20 @@ function minimax(boardState, depth, isMax) {
 }
 
 function checkWinner(p, customBoard = cells) {
-  return winConditions.some(([a, b, c]) => customBoard[a] === p && customBoard[b] === p && customBoard[c] === p);
+  return winConditions.some(([a, b, c]) => {
+    if (customBoard[a] === p && customBoard[b] === p && customBoard[c] === p) {
+      highlightWinner([a, b, c]);
+      return true;
+    }
+    return false;
+  });
+}
+
+function highlightWinner(indices) {
+  indices.forEach(i => {
+    const cell = board.children[i];
+    if (cell) cell.classList.add('highlight');
+  });
 }
 
 function isDraw() {
@@ -154,31 +179,15 @@ function isDraw() {
 function endGame(message, result) {
   statusText.textContent = message;
   gameActive = false;
-  if (result === 'win') {
-    winCount++;
-    coins += 10;
-  } else if (result === 'lose') {
-    loseCount++;
-  } else if (result === 'draw') {
-    drawCount++;
-    coins += 2;
-  }
-  updateScoreboard();
+  if (result === 'win') win++, coin += 5;
+  else if (result === 'lose') lose++;
+  else if (result === 'draw') draw++;
+  updateScore();
 }
 
-function updateScoreboard() {
-  let board = document.getElementById('scoreboard');
-  if (!board) {
-    board = document.createElement('div');
-    board.id = 'scoreboard';
-    board.className = 'scoreboard';
-    document.querySelector('.game-container').appendChild(board);
+function updateScore() {
+  const score = document.getElementById("score")
+  if (score) {
+    score.innerHTML = `🏆 Menang: ${win} | ❌ Kalah: ${lose} | 😐 Seri: ${draw} | 🪙 Coin: ${coin}`;
   }
-  board.innerHTML = `
-    <h3>📊 Skor</h3>
-    <p>🏆 Menang: ${winCount}</p>
-    <p>💀 Kalah: ${loseCount}</p>
-    <p>🤝 Seri: ${drawCount}</p>
-    <p>🪙 Coin: ${coins}</p>
-  `;
 }
