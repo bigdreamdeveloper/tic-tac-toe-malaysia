@@ -4,7 +4,64 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Tic Tac Teh Tarik 🇲🇾</title>
+  <link rel="stylesheet" href="style.css" /><!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tic Tac Teh Tarik 🇲🇾</title>
   <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="game-container">
+    <h1>Tic Tac Teh Tarik <span style="color: red;">MY</span></h1>
+
+    <!-- Dark Mode Toggle -->
+    <label class="theme-toggle">
+      <input type="checkbox" id="darkToggle"> 🌙 Dark Mode
+    </label>
+
+    <!-- Setup Menu -->
+    <div id="setup">
+      <label for="difficulty">Pilih Tahap AI:</label>
+      <select id="difficulty">
+        <option value="easy">Senang (Easy)</option>
+        <option value="medium">Sederhana (Medium)</option>
+        <option value="hard">Susah (Hard)</option>
+      </select>
+      <button id="startBtn">Mula Game</button>
+    </div>
+
+    <!-- Game Area -->
+    <div id="game" style="display: none;">
+      <!-- Papar difficulty selepas mula -->
+      <div id="difficultyDisplay" class="difficulty-display"></div>
+
+      <!-- Butang atas -->
+      <div class="top-buttons">
+        <button id="backBtn">← Tukar AI</button>
+        <button id="resetBtn">Main Semula</button>
+      </div>
+
+      <!-- Board -->
+      <div class="board" id="board"></div>
+
+      <!-- Status Giliran -->
+      <div class="status" id="status">Giliran: 🧋</div>
+
+      <!-- Scoreboard -->
+      <div class="scoreboard">
+        🏆 Menang: <span id="winCount">0</span> |
+        ❌ Kalah: <span id="loseCount">0</span> |
+        😐 Seri: <span id="drawCount">0</span> |
+        🪙 Coin: <span id="coinCount">0</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
 </head>
 <body>
   <div class="game-container">
