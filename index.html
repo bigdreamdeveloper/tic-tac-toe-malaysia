@@ -1,35 +1,43 @@
 <!DOCTYPE html>
 <html lang="ms">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Tic Tac Teh Tarik 🇲🇾</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <title>Dam Ular: Nasi Lemak Edition</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="game-container">
-    <h1><span style="color: orangered;">Tic Tac Teh Tarik</span> <span style="color: red;">MY</span></h1>
+  <div class="game-wrapper">
+    <h1>🐍 Dam Ular: Nasi Lemak Edition 🇲🇾</h1>
 
-    <label class="theme-toggle">
-      <input type="checkbox" id="darkToggle" />
-      🌙 Dark Mode
-    </label>
-
-    <div id="setup">
-      <label for="difficulty">Pilih Tahap AI:</label>
-      <select id="difficulty">
-        <option value="easy">Senang (Easy)</option>
-        <option value="medium">Sederhana (Medium)</option>
-        <option value="hard">Susah (Hard)</option>
+    <div class="setup">
+      <label for="playerToken">Pilih Token Anda:</label>
+      <select id="playerToken">
+        <option value="🍳">🍳</option>
+        <option value="🐔">🐔</option>
+        <option value="🧋">🧋</option>
+        <option value="🥥">🥥</option>
+        <option value="🥚">🥚</option>
       </select>
       <button id="startBtn">Mula Game</button>
     </div>
 
-    <div id="game" style="display: none;">
-      <p id="difficultyDisplay"></p>
-      <div class="board" id="board"></div>
-      <div class="status" id="status">Giliran: 🧋</div>
-      <button id="resetBtn">Main Semula</button>
+    <div id="gameArea" style="display:none">
+      <div id="board" class="board"></div>
+      <div class="controls">
+        <button id="rollBtn">🎲 Roll Dadu</button>
+        <button id="playAgainBtn" style="display:none">🔁 Main Lagi</button>
+      </div>
+      <div id="message" class="message">Sedia untuk bermain...</div>
+      <div id="logBox" class="log-box"></div>
+    </div>
+
+    <!-- Modal Soalan -->
+    <div id="questionModal" class="modal">
+      <div class="modal-content">
+        <p id="questionText"></p>
+        <div id="optionButtons"></div>
+      </div>
     </div>
   </div>
 
