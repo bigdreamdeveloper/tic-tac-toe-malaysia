@@ -7,6 +7,11 @@ const gameDiv = document.getElementById('game');
 const setupDiv = document.getElementById('setup');
 const darkToggle = document.getElementById('darkToggle');
 
+const winCountEl = document.getElementById('winCount');
+const loseCountEl = document.getElementById('loseCount');
+const drawCountEl = document.getElementById('drawCount');
+const coinCountEl = document.getElementById('coinCount');
+
 let cells = Array(9).fill(null);
 let player = "🧋";
 let ai = "🍗";
@@ -19,7 +24,28 @@ const winConditions = [
   [0,4,8],[2,4,6]
 ];
 
-// DARK MODE SETUP
+// 🎯 Setup skor dari localStorage
+let score = {
+  win: parseInt(localStorage.getItem('win') || 0),
+  lose: parseInt(localStorage.getItem('lose') || 0),
+  draw: parseInt(localStorage.getItem('draw') || 0),
+  coin: parseInt(localStorage.getItem('coin') || 0),
+};
+
+function updateScoreDisplay() {
+  winCountEl.textContent = score.win;
+  loseCountEl.textContent = score.lose;
+  drawCountEl.textContent = score.draw;
+  coinCountEl.textContent = score.coin;
+}
+
+function saveScore() {
+  for (const key in score) {
+    localStorage.setItem(key, score[key]);
+  }
+}
+
+// 🌙 Dark mode setup
 if (localStorage.getItem('theme') === 'dark') {
   document.body.classList.add('dark-mode');
   darkToggle.checked = true;
@@ -35,13 +61,16 @@ darkToggle.addEventListener('change', () => {
   }
 });
 
-// MULAKAN GAME
+// 🎮 Mula Game
 startBtn.addEventListener('click', () => {
   selectedDifficulty = difficultySelect.value;
   setupDiv.style.display = "none";
   gameDiv.style.display = "block";
+  updateScoreDisplay();
   startGame();
 });
+
+resetBtn.addEventListener('click', startGame);
 
 function startGame() {
   cells = Array(9).fill(null);
@@ -49,8 +78,6 @@ function startGame() {
   statusText.textContent = `Giliran: ${player}`;
   renderBoard();
 }
-
-resetBtn.addEventListener('click', startGame);
 
 function renderBoard() {
   board.innerHTML = '';
@@ -132,7 +159,9 @@ function minimax(boardState, depth, isMax) {
 }
 
 function checkWinner(p, customBoard = cells) {
-  return winConditions.some(([a, b, c]) => customBoard[a] === p && customBoard[b] === p && customBoard[c] === p);
+  return winConditions.some(([a, b, c]) =>
+    customBoard[a] === p && customBoard[b] === p && customBoard[c] === p
+  );
 }
 
 function isDraw() {
@@ -142,4 +171,17 @@ function isDraw() {
 function endGame(message) {
   statusText.textContent = message;
   gameActive = false;
+
+  if (message.includes(player)) {
+    score.win++;
+    score.coin += 5;
+    confetti({ spread: 100, particleCount: 120, origin: { y: 0.6 } }); // 🎉 Confetti!
+  } else if (message.includes(ai)) {
+    score.lose++;
+  } else {
+    score.draw++;
+  }
+
+  saveScore();
+  updateScoreDisplay();
 }
