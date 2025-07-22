@@ -1,23 +1,6 @@
 // script.js
 
-// Firebase Setup
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyD3ANamHTn1bHchmUhIvea3bwdkvEm9hZU",
-  authDomain: "tictactehtarik.firebaseapp.com",
-  projectId: "tictactehtarik",
-  storageBucket: "tictactehtarik.firebasestorage.app",
-  messagingSenderId: "1058843651428",
-  appId: "1:1058843651428:web:139549568a03e202ed9e71",
-  measurementId: "G-7DZR27JN3P"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-// Game Logic
+// Game Elements
 let currentPlayer = "P1";
 let gameActive = false;
 let board = ["", "", "", "", "", "", "", "", ""];
@@ -33,7 +16,9 @@ const scoreboard = document.getElementById("scoreboard");
 const winSound = document.getElementById("winSound");
 const drawSound = document.getElementById("drawSound");
 const clickSound = document.getElementById("clickSound");
-const leaderList = document.getElementById("leaderList");
+
+const emojiP1 = document.getElementById("player1Emoji");
+const emojiP2 = document.getElementById("player2Emoji");
 
 let scores = { P1: 0, P2: 0, draw: 0 };
 
@@ -52,9 +37,13 @@ function initBoard() {
 function handleCellClick(e) {
   const index = e.target.dataset.index;
   if (!gameActive || board[index] !== "") return;
+
   clickSound.play();
   board[index] = currentPlayer;
-  e.target.textContent = currentPlayer === "P1" ? "🍛" : "🫖";
+
+  const emoji = currentPlayer === "P1" ? emojiP1.value : emojiP2.value;
+  e.target.textContent = emoji;
+
   if (checkWin()) {
     endGame(currentPlayer);
   } else if (board.every(cell => cell !== "")) {
@@ -78,6 +67,7 @@ function checkWin() {
 
 function endGame(winner) {
   gameActive = false;
+
   if (winner === "draw") {
     statusText.textContent = "Seri!";
     drawSound.play();
@@ -87,9 +77,8 @@ function endGame(winner) {
     winSound.play();
     scores[winner]++;
   }
+
   updateScores();
-  saveScoreToFirestore(winner);
-  loadLeaderboard();
 }
 
 function updateScores() {
@@ -103,10 +92,9 @@ startBtn.addEventListener("click", () => {
   currentPlayer = "P1";
   statusText.textContent = "Giliran Player 1";
   initBoard();
-  document.getElementById("game").classList.remove("hidden");
+  gameContainer.classList.remove("hidden");
   restartBtn.classList.remove("hidden");
   scoreboard.classList.remove("hidden");
-  loadLeaderboard();
 });
 
 restartBtn.addEventListener("click", () => {
@@ -115,31 +103,3 @@ restartBtn.addEventListener("click", () => {
   statusText.textContent = "Giliran Player 1";
   initBoard();
 });
-
-async function saveScoreToFirestore(winner) {
-  try {
-    await addDoc(collection(db, "scores"), {
-      winner: winner,
-      timestamp: new Date()
-    });
-    console.log("Score saved to Firestore.");
-  } catch (e) {
-    console.error("Error saving score:", e);
-  }
-}
-
-async function loadLeaderboard() {
-  try {
-    const q = query(collection(db, "scores"), orderBy("timestamp", "desc"), limit(10));
-    const querySnapshot = await getDocs(q);
-    leaderList.innerHTML = "";
-    querySnapshot.forEach(doc => {
-      const data = doc.data();
-      const li = document.createElement("li");
-      li.textContent = `🏅 ${data.winner.toUpperCase()} - ${new Date(data.timestamp.toDate()).toLocaleString()}`;
-      leaderList.appendChild(li);
-    });
-  } catch (e) {
-    console.error("Error loading leaderboard:", e);
-  }
-}
