@@ -1,105 +1,145 @@
-// script.js
+const board = document.getElementById('board');
+const statusText = document.getElementById('status');
+const resetBtn = document.getElementById('resetBtn');
+const difficultySelect = document.getElementById('difficulty');
+const startBtn = document.getElementById('startBtn');
+const gameDiv = document.getElementById('game');
+const setupDiv = document.getElementById('setup');
+const darkToggle = document.getElementById('darkToggle');
 
-// Game Elements
-let currentPlayer = "P1";
+let cells = Array(9).fill(null);
+let player = "🧋";
+let ai = "🍗";
 let gameActive = false;
-let board = ["", "", "", "", "", "", "", "", ""];
+let selectedDifficulty = "easy";
 
-const statusText = document.getElementById("statusText");
-const gameContainer = document.getElementById("game");
-const startBtn = document.getElementById("startBtn");
-const restartBtn = document.getElementById("restartBtn");
-const scoreP1 = document.getElementById("scoreP1");
-const scoreP2 = document.getElementById("scoreP2");
-const scoreDraw = document.getElementById("scoreDraw");
-const scoreboard = document.getElementById("scoreboard");
-const winSound = document.getElementById("winSound");
-const drawSound = document.getElementById("drawSound");
-const clickSound = document.getElementById("clickSound");
+const winConditions = [
+  [0,1,2],[3,4,5],[6,7,8],
+  [0,3,6],[1,4,7],[2,5,8],
+  [0,4,8],[2,4,6]
+];
 
-const emojiP1 = document.getElementById("player1Emoji");
-const emojiP2 = document.getElementById("player2Emoji");
+// DARK MODE SETUP
+if (localStorage.getItem('theme') === 'dark') {
+  document.body.classList.add('dark-mode');
+  darkToggle.checked = true;
+}
 
-let scores = { P1: 0, P2: 0, draw: 0 };
+darkToggle.addEventListener('change', () => {
+  if (darkToggle.checked) {
+    document.body.classList.add('dark-mode');
+    localStorage.setItem('theme', 'dark');
+  } else {
+    document.body.classList.remove('dark-mode');
+    localStorage.setItem('theme', 'light');
+  }
+});
 
-function initBoard() {
-  gameContainer.innerHTML = "";
-  board = ["", "", "", "", "", "", "", "", ""];
+// MULAKAN GAME
+startBtn.addEventListener('click', () => {
+  selectedDifficulty = difficultySelect.value;
+  setupDiv.style.display = "none";
+  gameDiv.style.display = "block";
+  startGame();
+});
+
+function startGame() {
+  cells = Array(9).fill(null);
+  gameActive = true;
+  statusText.textContent = `Giliran: ${player}`;
+  renderBoard();
+}
+
+resetBtn.addEventListener('click', startGame);
+
+function renderBoard() {
+  board.innerHTML = '';
+  cells.forEach((val, idx) => {
+    const cell = document.createElement('div');
+    cell.classList.add('cell');
+    cell.textContent = val;
+    cell.addEventListener('click', () => playerMove(idx));
+    board.appendChild(cell);
+  });
+}
+
+function playerMove(index) {
+  if (!gameActive || cells[index]) return;
+  cells[index] = player;
+  renderBoard();
+  if (checkWinner(player)) return endGame(`${player} menang! 🎉`);
+  if (isDraw()) return endGame("Seri!");
+  statusText.textContent = `Giliran: ${ai}`;
+  setTimeout(botMove, 500);
+}
+
+function botMove() {
+  let move;
+  if (selectedDifficulty === "easy") {
+    move = getRandomMove();
+  } else if (selectedDifficulty === "medium") {
+    move = Math.random() < 0.5 ? getRandomMove() : getBestMove();
+  } else {
+    move = getBestMove();
+  }
+
+  if (move !== null) {
+    cells[move] = ai;
+    renderBoard();
+    if (checkWinner(ai)) return endGame(`${ai} menang! 🤖`);
+    if (isDraw()) return endGame("Seri!");
+    statusText.textContent = `Giliran: ${player}`;
+  }
+}
+
+function getRandomMove() {
+  const empty = cells.map((val, i) => val === null ? i : null).filter(i => i !== null);
+  return empty[Math.floor(Math.random() * empty.length)];
+}
+
+function getBestMove() {
+  let bestScore = -Infinity;
+  let move = null;
   for (let i = 0; i < 9; i++) {
-    const cell = document.createElement("div");
-    cell.className = "cell";
-    cell.dataset.index = i;
-    cell.addEventListener("click", handleCellClick);
-    gameContainer.appendChild(cell);
+    if (!cells[i]) {
+      cells[i] = ai;
+      let score = minimax(cells, 0, false);
+      cells[i] = null;
+      if (score > bestScore) {
+        bestScore = score;
+        move = i;
+      }
+    }
   }
+  return move;
 }
 
-function handleCellClick(e) {
-  const index = e.target.dataset.index;
-  if (!gameActive || board[index] !== "") return;
+function minimax(boardState, depth, isMax) {
+  if (checkWinner(ai, boardState)) return 10 - depth;
+  if (checkWinner(player, boardState)) return depth - 10;
+  if (!boardState.includes(null)) return 0;
 
-  clickSound.play();
-  board[index] = currentPlayer;
-
-  const emoji = currentPlayer === "P1" ? emojiP1.value : emojiP2.value;
-  e.target.textContent = emoji;
-
-  if (checkWin()) {
-    endGame(currentPlayer);
-  } else if (board.every(cell => cell !== "")) {
-    endGame("draw");
-  } else {
-    currentPlayer = currentPlayer === "P1" ? "P2" : "P1";
-    statusText.textContent = `Giliran ${currentPlayer === "P1" ? "Player 1" : "Player 2"}`;
+  let best = isMax ? -Infinity : Infinity;
+  for (let i = 0; i < 9; i++) {
+    if (!boardState[i]) {
+      boardState[i] = isMax ? ai : player;
+      let score = minimax(boardState, depth + 1, !isMax);
+      boardState[i] = null;
+      best = isMax ? Math.max(best, score) : Math.min(best, score);
+    }
   }
+  return best;
 }
 
-function checkWin() {
-  const winCombos = [
-    [0,1,2], [3,4,5], [6,7,8],
-    [0,3,6], [1,4,7], [2,5,8],
-    [0,4,8], [2,4,6]
-  ];
-  return winCombos.some(combo =>
-    combo.every(i => board[i] === currentPlayer)
-  );
+function checkWinner(p, customBoard = cells) {
+  return winConditions.some(([a, b, c]) => customBoard[a] === p && customBoard[b] === p && customBoard[c] === p);
 }
 
-function endGame(winner) {
+function isDraw() {
+  return cells.every(cell => cell !== null);
+}
+
+function endGame(message) {
+  statusText.textContent = message;
   gameActive = false;
-
-  if (winner === "draw") {
-    statusText.textContent = "Seri!";
-    drawSound.play();
-    scores.draw++;
-  } else {
-    statusText.textContent = `${winner === "P1" ? "Player 1" : "Player 2"} Menang!`;
-    winSound.play();
-    scores[winner]++;
-  }
-
-  updateScores();
 }
-
-function updateScores() {
-  scoreP1.textContent = `Player 1: ${scores.P1}`;
-  scoreP2.textContent = `Player 2 / AI: ${scores.P2}`;
-  scoreDraw.textContent = `Seri: ${scores.draw}`;
-}
-
-startBtn.addEventListener("click", () => {
-  gameActive = true;
-  currentPlayer = "P1";
-  statusText.textContent = "Giliran Player 1";
-  initBoard();
-  gameContainer.classList.remove("hidden");
-  restartBtn.classList.remove("hidden");
-  scoreboard.classList.remove("hidden");
-});
-
-restartBtn.addEventListener("click", () => {
-  gameActive = true;
-  currentPlayer = "P1";
-  statusText.textContent = "Giliran Player 1";
-  initBoard();
-});
