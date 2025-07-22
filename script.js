@@ -1,201 +1,189 @@
-// --- Global Variables ---
-const board = document.getElementById('board');
-const statusText = document.getElementById('status');
-const resetBtn = document.getElementById('resetBtn');
-const difficultySelect = document.getElementById('difficulty');
-const startBtn = document.getElementById('startBtn');
-const gameDiv = document.getElementById('game');
-const setupDiv = document.getElementById('setup');
-const darkToggle = document.getElementById('darkToggle');
-const difficultyLabel = document.getElementById('difficultyLabel');
-const backBtn = document.getElementById('backBtn');
-const scoreboard = document.getElementById('scoreboard');
-
-let cells = Array(9).fill(null);
-let player = "🧋";
-let ai = "🍗";
+let board = ["", "", "", "", "", "", "", "", ""];
+let currentPlayer = "🧋";
+let aiPlayer = "🍗";
+let difficulty = "easy";
 let gameActive = false;
-let selectedDifficulty = "easy";
 let playerTurn = true;
-let score = {
-  win: 0,
-  lose: 0,
-  draw: 0,
-  coin: 0
-};
+let win = 0, lose = 0, draw = 0, coins = 0;
 
-const winConditions = [
-  [0,1,2],[3,4,5],[6,7,8],
-  [0,3,6],[1,4,7],[2,5,8],
-  [0,4,8],[2,4,6]
-];
+const cells = [];
 
-// --- Theme ---
-if (localStorage.getItem('theme') === 'dark') {
-  document.body.classList.add('dark-mode');
-  darkToggle.checked = true;
-}
-darkToggle.addEventListener('change', () => {
-  if (darkToggle.checked) {
-    document.body.classList.add('dark-mode');
-    localStorage.setItem('theme', 'dark');
-  } else {
-    document.body.classList.remove('dark-mode');
-    localStorage.setItem('theme', 'light');
+const boardDiv = document.getElementById("board");
+const statusDiv = document.getElementById("status");
+const resetBtn = document.getElementById("resetBtn");
+const backBtn = document.getElementById("backBtn");
+const darkToggle = document.getElementById("darkToggle");
+
+function createBoard() {
+  boardDiv.innerHTML = "";
+  cells.length = 0;
+  for (let i = 0; i < 9; i++) {
+    const cell = document.createElement("div");
+    cell.classList.add("cell");
+    cell.dataset.index = i;
+    cell.addEventListener("click", handleCellClick);
+    boardDiv.appendChild(cell);
+    cells.push(cell);
   }
-});
-
-// --- Start Game ---
-startBtn.addEventListener('click', () => {
-  selectedDifficulty = difficultySelect.value;
-  setupDiv.style.display = "none";
-  gameDiv.style.display = "block";
-  difficultyLabel.textContent = `🧠 Tahap AI: ${difficultySelect.options[difficultySelect.selectedIndex].text}`;
-  startGame();
-});
-
-backBtn.addEventListener('click', () => {
-  gameDiv.style.display = "none";
-  setupDiv.style.display = "block";
-});
-
-resetBtn.addEventListener('click', startGame);
-
-function startGame() {
-  cells = Array(9).fill(null);
-  gameActive = true;
-  playerTurn = true;
-  statusText.textContent = `Giliran: ${player}`;
-  renderBoard();
 }
 
-function renderBoard() {
-  board.innerHTML = '';
-  cells.forEach((val, idx) => {
-    const cell = document.createElement('div');
-    cell.classList.add('cell');
-    cell.textContent = val;
-    if (!val && gameActive && playerTurn) {
-      cell.addEventListener('click', () => playerMove(idx));
-    }
-    board.appendChild(cell);
-  });
-}
-
-function playerMove(index) {
-  if (!gameActive || cells[index] || !playerTurn) return;
-  cells[index] = player;
+function handleCellClick(e) {
+  const index = e.target.dataset.index;
+  if (!gameActive || !playerTurn || board[index]) return;
+  board[index] = currentPlayer;
+  updateBoard();
+  if (checkWin(currentPlayer)) return endGame("menang");
+  if (board.every(cell => cell !== "")) return endGame("seri");
   playerTurn = false;
-  renderBoard();
-  if (checkWinner(player)) {
-    endGame(`${player} menang! 🎉`, 'win');
-    return;
-  }
-  if (isDraw()) {
-    endGame("Seri!", 'draw');
-    return;
-  }
-  statusText.textContent = `Giliran: ${ai}`;
-  setTimeout(botMove, 500);
-}
-
-function botMove() {
-  let move;
-  if (selectedDifficulty === "easy") {
-    move = getRandomMove();
-  } else if (selectedDifficulty === "medium") {
-    move = Math.random() < 0.5 ? getRandomMove() : getBestMove();
-  } else {
-    move = getBestMove();
-  }
-
-  if (move !== null) {
-    cells[move] = ai;
-    renderBoard();
-    if (checkWinner(ai)) {
-      endGame(`${ai} menang! 🤖`, 'lose');
-      return;
-    }
-    if (isDraw()) {
-      endGame("Seri!", 'draw');
-      return;
-    }
+  setTimeout(() => {
+    aiMove();
+    updateBoard();
+    if (checkWin(aiPlayer)) return endGame("kalah");
+    if (board.every(cell => cell !== "")) return endGame("seri");
     playerTurn = true;
-    statusText.textContent = `Giliran: ${player}`;
-  }
+    updateStatus();
+  }, 400);
 }
 
-function getRandomMove() {
-  const empty = cells.map((val, i) => val === null ? i : null).filter(i => i !== null);
+function updateBoard() {
+  board.forEach((val, i) => {
+    cells[i].textContent = val;
+    cells[i].classList.remove("win");
+  });
+  updateStatus();
+}
+
+function updateStatus() {
+  statusDiv.textContent = `Giliran: ${playerTurn ? currentPlayer : aiPlayer}`;
+}
+
+function endGame(result) {
+  gameActive = false;
+  let winCombo = getWinCombo(playerTurn ? currentPlayer : aiPlayer);
+  if (winCombo) winCombo.forEach(i => cells[i].classList.add("win"));
+  if (result === "menang") {
+    statusDiv.textContent = `${currentPlayer} menang! 🎉`;
+    win++; coins++;
+  } else if (result === "kalah") {
+    statusDiv.textContent = `${aiPlayer} menang! 🎉`;
+    lose++;
+  } else {
+    statusDiv.textContent = "Seri!";
+    draw++;
+  }
+  document.getElementById("winCount").textContent = win;
+  document.getElementById("loseCount").textContent = lose;
+  document.getElementById("drawCount").textContent = draw;
+  document.getElementById("coinCount").textContent = coins;
+}
+
+function getWinCombo(player) {
+  const combos = [
+    [0,1,2],[3,4,5],[6,7,8],
+    [0,3,6],[1,4,7],[2,5,8],
+    [0,4,8],[2,4,6]
+  ];
+  return combos.find(c => c.every(i => board[i] === player));
+}
+
+function checkWin(player) {
+  return !!getWinCombo(player);
+}
+
+function aiMove() {
+  let index;
+  const empty = board.map((v, i) => v === "" ? i : null).filter(i => i !== null);
+  if (difficulty === "easy") {
+    index = empty[Math.floor(Math.random() * empty.length)];
+  } else if (difficulty === "medium") {
+    index = findBestMove(aiPlayer, currentPlayer);
+  } else {
+    index = minimax(board, aiPlayer).index;
+  }
+  board[index] = aiPlayer;
+}
+
+function findBestMove(player, opponent) {
+  const winCombo = getWinComboMove(player);
+  if (winCombo) return winCombo;
+  const block = getWinComboMove(opponent);
+  if (block) return block;
+  const corners = [0,2,6,8].filter(i => board[i] === "");
+  if (corners.length) return corners[Math.floor(Math.random()*corners.length)];
+  const center = board[4] === "" ? 4 : null;
+  if (center !== null) return center;
+  const empty = board.map((v, i) => v === "" ? i : null).filter(i => i !== null);
   return empty[Math.floor(Math.random() * empty.length)];
 }
 
-function getBestMove() {
-  let bestScore = -Infinity;
-  let move = null;
-  for (let i = 0; i < 9; i++) {
-    if (!cells[i]) {
-      cells[i] = ai;
-      let score = minimax(cells, 0, false);
-      cells[i] = null;
-      if (score > bestScore) {
-        bestScore = score;
-        move = i;
-      }
+function getWinComboMove(p) {
+  const combos = [
+    [0,1,2],[3,4,5],[6,7,8],
+    [0,3,6],[1,4,7],[2,5,8],
+    [0,4,8],[2,4,6]
+  ];
+  for (let c of combos) {
+    const vals = c.map(i => board[i]);
+    if (vals.filter(v => v === p).length === 2 && vals.includes("")) {
+      return c[vals.indexOf("")];
     }
   }
-  return move;
+  return null;
 }
 
-function minimax(boardState, depth, isMax) {
-  if (checkWinner(ai, boardState)) return 10 - depth;
-  if (checkWinner(player, boardState)) return depth - 10;
-  if (!boardState.includes(null)) return 0;
-
-  let best = isMax ? -Infinity : Infinity;
-  for (let i = 0; i < 9; i++) {
-    if (!boardState[i]) {
-      boardState[i] = isMax ? ai : player;
-      let score = minimax(boardState, depth + 1, !isMax);
-      boardState[i] = null;
-      best = isMax ? Math.max(best, score) : Math.min(best, score);
-    }
+function minimax(newBoard, player) {
+  const huPlayer = currentPlayer;
+  const ai = aiPlayer;
+  const avail = newBoard.map((v, i) => v === "" ? i : null).filter(i => i !== null);
+  if (checkWinMinimax(huPlayer, newBoard)) return {score: -10};
+  if (checkWinMinimax(ai, newBoard)) return {score: 10};
+  if (avail.length === 0) return {score: 0};
+  let moves = [];
+  for (let i of avail) {
+    let move = {}; move.index = i;
+    newBoard[i] = player;
+    let result = minimax(newBoard, player === ai ? huPlayer : ai);
+    move.score = result.score;
+    newBoard[i] = "";
+    moves.push(move);
   }
-  return best;
+  return moves.reduce((best, m) =>
+    (player === ai && m.score > best.score) || (player === huPlayer && m.score < best.score) ? m : best
+  , moves[0]);
 }
 
-function checkWinner(p, customBoard = cells) {
-  return winConditions.some(([a, b, c]) => {
-    if (customBoard[a] === p && customBoard[b] === p && customBoard[c] === p) {
-      if (customBoard === cells) {
-        document.querySelectorAll('.cell')[a].classList.add('win');
-        document.querySelectorAll('.cell')[b].classList.add('win');
-        document.querySelectorAll('.cell')[c].classList.add('win');
-      }
-      return true;
-    }
-    return false;
-  });
+function checkWinMinimax(p, boardState) {
+  return [
+    [0,1,2],[3,4,5],[6,7,8],
+    [0,3,6],[1,4,7],[2,5,8],
+    [0,4,8],[2,4,6]
+  ].some(c => c.every(i => boardState[i] === p));
 }
 
-function isDraw() {
-  return cells.every(cell => cell !== null);
+function resetGame() {
+  board = ["", "", "", "", "", "", "", "", ""];
+  gameActive = true;
+  playerTurn = true;
+  updateStatus();
+  createBoard();
 }
 
-function endGame(message, result) {
-  statusText.textContent = message;
-  gameActive = false;
-  if (result === 'win') {
-    score.win++;
-    score.coin += 5;
-  } else if (result === 'lose') {
-    score.lose++;
-  } else if (result === 'draw') {
-    score.draw++;
-  }
-  updateScoreboard();
-}
+resetBtn.addEventListener("click", resetGame);
+backBtn.addEventListener("click", () => {
+  document.getElementById("setup").style.display = "block";
+  document.getElementById("game").style.display = "none";
+});
 
-function updateScoreboard() {
-  scoreboard.innerHTML = `🏆 Menang: ${score.win} | ❌ Kalah: ${score.lose} | 😐 Seri: ${score.draw} | 🪙 Coin: ${score.coin}`;
-}
+document.getElementById("startBtn").addEventListener("click", () => {
+  difficulty = document.getElementById("difficulty").value;
+  document.getElementById("difficultyDisplay").textContent = `🧠 Tahap AI: ${
+    difficulty === 'easy' ? 'Senang' : difficulty === 'medium' ? 'Sederhana' : 'Susah'
+  }`;
+  document.getElementById("setup").style.display = "none";
+  document.getElementById("game").style.display = "block";
+  resetGame();
+});
+
+darkToggle.addEventListener("change", () => {
+  document.body.classList.toggle("dark", darkToggle.checked);
+});
