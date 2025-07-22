@@ -8,13 +8,14 @@
 </head>
 <body>
   <div class="game-container">
-    <h1><span style="color: orangered;">Tic Tac Teh Tarik</span> <span style="color: red;">MY</span></h1>
+    <h1>Tic Tac Teh Tarik <span style="color: red;">MY</span></h1>
 
+    <!-- Dark Mode Toggle -->
     <label class="theme-toggle">
-      <input type="checkbox" id="darkToggle" />
-      🌙 Dark Mode
+      <input type="checkbox" id="darkToggle"> 🌙 Dark Mode
     </label>
 
+    <!-- Setup Menu -->
     <div id="setup">
       <label for="difficulty">Pilih Tahap AI:</label>
       <select id="difficulty">
@@ -25,22 +26,34 @@
       <button id="startBtn">Mula Game</button>
     </div>
 
+    <!-- Game Area -->
     <div id="game" style="display: none;">
-      <p id="difficultyDisplay" class="difficulty-label"></p>
+      <!-- Papar difficulty selepas mula -->
+      <div id="difficultyDisplay" class="difficulty-display"></div>
+
+      <!-- Butang atas -->
+      <div class="top-buttons">
+        <button id="backBtn">← Tukar AI</button>
+        <button id="resetBtn">Main Semula</button>
+      </div>
+
+      <!-- Board -->
       <div class="board" id="board"></div>
+
+      <!-- Status Giliran -->
       <div class="status" id="status">Giliran: 🧋</div>
 
+      <!-- Scoreboard -->
       <div class="scoreboard">
         🏆 Menang: <span id="winCount">0</span> |
         ❌ Kalah: <span id="loseCount">0</span> |
         😐 Seri: <span id="drawCount">0</span> |
         🪙 Coin: <span id="coinCount">0</span>
       </div>
-
-      <button id="resetBtn">Main Semula</button>
     </div>
   </div>
 
+  <!-- JS -->
   <script src="script.js"></script>
 </body>
 </html>
