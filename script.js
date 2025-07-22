@@ -1,3 +1,5 @@
+// script.js for Tic Tac Teh Tarik 🇲🇾
+
 const board = document.getElementById('board');
 const statusText = document.getElementById('status');
 const resetBtn = document.getElementById('resetBtn');
@@ -6,7 +8,6 @@ const startBtn = document.getElementById('startBtn');
 const gameDiv = document.getElementById('game');
 const setupDiv = document.getElementById('setup');
 const darkToggle = document.getElementById('darkToggle');
-const difficultyDisplay = document.getElementById('difficultyDisplay');
 
 let cells = Array(9).fill(null);
 let player = "🧋";
@@ -14,10 +15,10 @@ let ai = "🍗";
 let gameActive = false;
 let selectedDifficulty = "easy";
 
-let win = 0;
-let lose = 0;
-let draw = 0;
-let coin = 0;
+let winCount = 0;
+let loseCount = 0;
+let drawCount = 0;
+let coins = 0;
 
 const winConditions = [
   [0,1,2],[3,4,5],[6,7,8],
@@ -25,7 +26,6 @@ const winConditions = [
   [0,4,8],[2,4,6]
 ];
 
-// DARK MODE SETUP
 if (localStorage.getItem('theme') === 'dark') {
   document.body.classList.add('dark-mode');
   darkToggle.checked = true;
@@ -41,26 +41,18 @@ darkToggle.addEventListener('change', () => {
   }
 });
 
-// MULAKAN GAME
 startBtn.addEventListener('click', () => {
   selectedDifficulty = difficultySelect.value;
   setupDiv.style.display = "none";
   gameDiv.style.display = "block";
-
-  const levelMap = {
-    easy: "Senang (Easy)",
-    medium: "Sederhana (Medium)",
-    hard: "Susah (Hard)"
-  };
-  difficultyDisplay.textContent = `Tahap AI: ${levelMap[selectedDifficulty]}`;
-
+  statusText.textContent = `Giliran: ${player} (AI: ${selectedDifficulty.toUpperCase()})`;
   startGame();
 });
 
 function startGame() {
   cells = Array(9).fill(null);
   gameActive = true;
-  statusText.textContent = `Giliran: ${player}`;
+  statusText.textContent = `Giliran: ${player} (AI: ${selectedDifficulty.toUpperCase()})`;
   renderBoard();
 }
 
@@ -81,9 +73,12 @@ function playerMove(index) {
   if (!gameActive || cells[index]) return;
   cells[index] = player;
   renderBoard();
-  if (checkWinner(player)) return endGame(`${player} menang! 🎉`);
-  if (isDraw()) return endGame("Seri!");
+
+  if (checkWinner(player)) return endGame(`${player} menang! 🎉`, 'win');
+  if (isDraw()) return endGame("Seri!", 'draw');
+
   statusText.textContent = `Giliran: ${ai}`;
+  gameActive = false; // Disable sementara AI fikir
   setTimeout(botMove, 500);
 }
 
@@ -100,9 +95,12 @@ function botMove() {
   if (move !== null) {
     cells[move] = ai;
     renderBoard();
-    if (checkWinner(ai)) return endGame(`${ai} menang! 🤖`);
-    if (isDraw()) return endGame("Seri!");
+
+    if (checkWinner(ai)) return endGame(`${ai} menang! 🤖`, 'lose');
+    if (isDraw()) return endGame("Seri!", 'draw');
+
     statusText.textContent = `Giliran: ${player}`;
+    gameActive = true; // Boleh main balik
   }
 }
 
@@ -153,22 +151,34 @@ function isDraw() {
   return cells.every(cell => cell !== null);
 }
 
-function endGame(message) {
+function endGame(message, result) {
   statusText.textContent = message;
   gameActive = false;
-
-  if (message.includes(`${player} menang`)) {
-    win++;
-    coin += 3;
-  } else if (message.includes(`${ai} menang`)) {
-    lose++;
-  } else {
-    draw++;
-    coin += 1;
+  if (result === 'win') {
+    winCount++;
+    coins += 10;
+  } else if (result === 'lose') {
+    loseCount++;
+  } else if (result === 'draw') {
+    drawCount++;
+    coins += 2;
   }
+  updateScoreboard();
+}
 
-  document.getElementById('winCount').textContent = win;
-  document.getElementById('loseCount').textContent = lose;
-  document.getElementById('drawCount').textContent = draw;
-  document.getElementById('coinCount').textContent = coin;
+function updateScoreboard() {
+  let board = document.getElementById('scoreboard');
+  if (!board) {
+    board = document.createElement('div');
+    board.id = 'scoreboard';
+    board.className = 'scoreboard';
+    document.querySelector('.game-container').appendChild(board);
+  }
+  board.innerHTML = `
+    <h3>📊 Skor</h3>
+    <p>🏆 Menang: ${winCount}</p>
+    <p>💀 Kalah: ${loseCount}</p>
+    <p>🤝 Seri: ${drawCount}</p>
+    <p>🪙 Coin: ${coins}</p>
+  `;
 }
