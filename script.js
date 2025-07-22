@@ -14,6 +14,11 @@ let ai = "🍗";
 let gameActive = false;
 let selectedDifficulty = "easy";
 
+let win = 0;
+let lose = 0;
+let draw = 0;
+let coin = 0;
+
 const winConditions = [
   [0,1,2],[3,4,5],[6,7,8],
   [0,3,6],[1,4,7],[2,5,8],
@@ -151,4 +156,19 @@ function isDraw() {
 function endGame(message) {
   statusText.textContent = message;
   gameActive = false;
+
+  if (message.includes(`${player} menang`)) {
+    win++;
+    coin += 3;
+  } else if (message.includes(`${ai} menang`)) {
+    lose++;
+  } else {
+    draw++;
+    coin += 1;
+  }
+
+  document.getElementById('winCount').textContent = win;
+  document.getElementById('loseCount').textContent = lose;
+  document.getElementById('drawCount').textContent = draw;
+  document.getElementById('coinCount').textContent = coin;
 }
