@@ -1,5 +1,4 @@
-// ✅ script.js untuk Tic Tac Toe Malaysia Edition dengan butang Back & highlight tiles menang
-
+// --- Global Variables ---
 const board = document.getElementById('board');
 const statusText = document.getElementById('status');
 const resetBtn = document.getElementById('resetBtn');
@@ -8,28 +7,34 @@ const startBtn = document.getElementById('startBtn');
 const gameDiv = document.getElementById('game');
 const setupDiv = document.getElementById('setup');
 const darkToggle = document.getElementById('darkToggle');
-let backBtn;
+const difficultyLabel = document.getElementById('difficultyLabel');
+const backBtn = document.getElementById('backBtn');
+const scoreboard = document.getElementById('scoreboard');
 
 let cells = Array(9).fill(null);
 let player = "🧋";
 let ai = "🍗";
 let gameActive = false;
 let selectedDifficulty = "easy";
-let aiThinking = false;
+let playerTurn = true;
+let score = {
+  win: 0,
+  lose: 0,
+  draw: 0,
+  coin: 0
+};
 
-let win = 0, lose = 0, draw = 0, coin = 0;
 const winConditions = [
   [0,1,2],[3,4,5],[6,7,8],
   [0,3,6],[1,4,7],[2,5,8],
   [0,4,8],[2,4,6]
 ];
 
-// Load dark mode from localStorage
+// --- Theme ---
 if (localStorage.getItem('theme') === 'dark') {
   document.body.classList.add('dark-mode');
   darkToggle.checked = true;
 }
-
 darkToggle.addEventListener('change', () => {
   if (darkToggle.checked) {
     document.body.classList.add('dark-mode');
@@ -40,45 +45,37 @@ darkToggle.addEventListener('change', () => {
   }
 });
 
+// --- Start Game ---
 startBtn.addEventListener('click', () => {
   selectedDifficulty = difficultySelect.value;
   setupDiv.style.display = "none";
   gameDiv.style.display = "block";
-  addBackButton();
+  difficultyLabel.textContent = `🧠 Tahap AI: ${difficultySelect.options[difficultySelect.selectedIndex].text}`;
   startGame();
 });
 
-function addBackButton() {
-  if (!backBtn) {
-    backBtn = document.createElement('button');
-    backBtn.id = "backBtn";
-    backBtn.textContent = "← Tukar AI";
-    backBtn.addEventListener('click', () => {
-      gameDiv.style.display = "none";
-      setupDiv.style.display = "block";
-    });
-    gameDiv.insertBefore(backBtn, board);
-  }
-}
+backBtn.addEventListener('click', () => {
+  gameDiv.style.display = "none";
+  setupDiv.style.display = "block";
+});
+
+resetBtn.addEventListener('click', startGame);
 
 function startGame() {
   cells = Array(9).fill(null);
   gameActive = true;
-  aiThinking = false;
-  statusText.textContent = `Giliran: ${player} (${selectedDifficulty})`;
+  playerTurn = true;
+  statusText.textContent = `Giliran: ${player}`;
   renderBoard();
 }
-
-resetBtn.addEventListener('click', startGame);
 
 function renderBoard() {
   board.innerHTML = '';
   cells.forEach((val, idx) => {
     const cell = document.createElement('div');
     cell.classList.add('cell');
-    cell.dataset.index = idx;
     cell.textContent = val;
-    if (!val && !aiThinking && gameActive) {
+    if (!val && gameActive && playerTurn) {
       cell.addEventListener('click', () => playerMove(idx));
     }
     board.appendChild(cell);
@@ -86,13 +83,19 @@ function renderBoard() {
 }
 
 function playerMove(index) {
-  if (!gameActive || cells[index] || aiThinking) return;
+  if (!gameActive || cells[index] || !playerTurn) return;
   cells[index] = player;
+  playerTurn = false;
   renderBoard();
-  if (checkWinner(player)) return endGame(`${player} menang! 🎉`, 'win');
-  if (isDraw()) return endGame("Seri!", 'draw');
+  if (checkWinner(player)) {
+    endGame(`${player} menang! 🎉`, 'win');
+    return;
+  }
+  if (isDraw()) {
+    endGame("Seri!", 'draw');
+    return;
+  }
   statusText.textContent = `Giliran: ${ai}`;
-  aiThinking = true;
   setTimeout(botMove, 500);
 }
 
@@ -109,9 +112,15 @@ function botMove() {
   if (move !== null) {
     cells[move] = ai;
     renderBoard();
-    aiThinking = false;
-    if (checkWinner(ai)) return endGame(`${ai} menang! 🤖`, 'lose');
-    if (isDraw()) return endGame("Seri!", 'draw');
+    if (checkWinner(ai)) {
+      endGame(`${ai} menang! 🤖`, 'lose');
+      return;
+    }
+    if (isDraw()) {
+      endGame("Seri!", 'draw');
+      return;
+    }
+    playerTurn = true;
     statusText.textContent = `Giliran: ${player}`;
   }
 }
@@ -158,17 +167,14 @@ function minimax(boardState, depth, isMax) {
 function checkWinner(p, customBoard = cells) {
   return winConditions.some(([a, b, c]) => {
     if (customBoard[a] === p && customBoard[b] === p && customBoard[c] === p) {
-      highlightWinner([a, b, c]);
+      if (customBoard === cells) {
+        document.querySelectorAll('.cell')[a].classList.add('win');
+        document.querySelectorAll('.cell')[b].classList.add('win');
+        document.querySelectorAll('.cell')[c].classList.add('win');
+      }
       return true;
     }
     return false;
-  });
-}
-
-function highlightWinner(indices) {
-  indices.forEach(i => {
-    const cell = board.children[i];
-    if (cell) cell.classList.add('highlight');
   });
 }
 
@@ -179,15 +185,17 @@ function isDraw() {
 function endGame(message, result) {
   statusText.textContent = message;
   gameActive = false;
-  if (result === 'win') win++, coin += 5;
-  else if (result === 'lose') lose++;
-  else if (result === 'draw') draw++;
-  updateScore();
+  if (result === 'win') {
+    score.win++;
+    score.coin += 5;
+  } else if (result === 'lose') {
+    score.lose++;
+  } else if (result === 'draw') {
+    score.draw++;
+  }
+  updateScoreboard();
 }
 
-function updateScore() {
-  const score = document.getElementById("score")
-  if (score) {
-    score.innerHTML = `🏆 Menang: ${win} | ❌ Kalah: ${lose} | 😐 Seri: ${draw} | 🪙 Coin: ${coin}`;
-  }
+function updateScoreboard() {
+  scoreboard.innerHTML = `🏆 Menang: ${score.win} | ❌ Kalah: ${score.lose} | 😐 Seri: ${score.draw} | 🪙 Coin: ${score.coin}`;
 }
