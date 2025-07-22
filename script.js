@@ -1,3 +1,4 @@
+// Elemen DOM
 const board = document.getElementById('board');
 const statusText = document.getElementById('status');
 const resetBtn = document.getElementById('resetBtn');
@@ -12,19 +13,14 @@ const loseCountEl = document.getElementById('loseCount');
 const drawCountEl = document.getElementById('drawCount');
 const coinCountEl = document.getElementById('coinCount');
 
+// State
 let cells = Array(9).fill(null);
 let player = "🧋";
 let ai = "🍗";
 let gameActive = false;
 let selectedDifficulty = "easy";
 
-const winConditions = [
-  [0,1,2],[3,4,5],[6,7,8],
-  [0,3,6],[1,4,7],[2,5,8],
-  [0,4,8],[2,4,6]
-];
-
-// 🎯 Setup skor dari localStorage
+// Skor dari localStorage
 let score = {
   win: parseInt(localStorage.getItem('win') || 0),
   lose: parseInt(localStorage.getItem('lose') || 0),
@@ -32,6 +28,7 @@ let score = {
   coin: parseInt(localStorage.getItem('coin') || 0),
 };
 
+// Fungsi update UI skor
 function updateScoreDisplay() {
   winCountEl.textContent = score.win;
   loseCountEl.textContent = score.lose;
@@ -39,13 +36,14 @@ function updateScoreDisplay() {
   coinCountEl.textContent = score.coin;
 }
 
+// Simpan skor
 function saveScore() {
   for (const key in score) {
     localStorage.setItem(key, score[key]);
   }
 }
 
-// 🌙 Dark mode setup
+// Dark Mode
 if (localStorage.getItem('theme') === 'dark') {
   document.body.classList.add('dark-mode');
   darkToggle.checked = true;
@@ -61,7 +59,7 @@ darkToggle.addEventListener('change', () => {
   }
 });
 
-// 🎮 Mula Game
+// Mula game
 startBtn.addEventListener('click', () => {
   selectedDifficulty = difficultySelect.value;
   setupDiv.style.display = "none";
@@ -70,6 +68,7 @@ startBtn.addEventListener('click', () => {
   startGame();
 });
 
+// Reset papan
 resetBtn.addEventListener('click', startGame);
 
 function startGame() {
@@ -159,9 +158,11 @@ function minimax(boardState, depth, isMax) {
 }
 
 function checkWinner(p, customBoard = cells) {
-  return winConditions.some(([a, b, c]) =>
-    customBoard[a] === p && customBoard[b] === p && customBoard[c] === p
-  );
+  return [
+    [0,1,2],[3,4,5],[6,7,8],
+    [0,3,6],[1,4,7],[2,5,8],
+    [0,4,8],[2,4,6]
+  ].some(([a, b, c]) => customBoard[a] === p && customBoard[b] === p && customBoard[c] === p);
 }
 
 function isDraw() {
@@ -175,7 +176,7 @@ function endGame(message) {
   if (message.includes(player)) {
     score.win++;
     score.coin += 5;
-    confetti({ spread: 100, particleCount: 120, origin: { y: 0.6 } }); // 🎉 Confetti!
+    confetti({ spread: 100, particleCount: 120, origin: { y: 0.6 } });
   } else if (message.includes(ai)) {
     score.lose++;
   } else {
@@ -185,3 +186,6 @@ function endGame(message) {
   saveScore();
   updateScoreDisplay();
 }
+
+// ✅ Papar skor semasa masa load
+updateScoreDisplay();
