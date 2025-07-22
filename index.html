@@ -1,104 +1,37 @@
-<!-- index.html -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ms">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Tic Tac Teh Tarik 🇲🇾</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body class="theme-normal">
-  <h1>Tic Tac Teh Tarik 🍛🫖</h1>
+<body>
+  <div class="game-container">
+    <h1>Tic Tac Teh Tarik 🇲🇾</h1>
 
-  <div class="picker">
-    <label for="gameMode">Pilih Mode:</label>
-    <select id="gameMode">
-      <option value="pvp">👥 Player vs Player</option>
-      <option value="ai">🤖 Player vs AI</option>
-    </select>
+    <label class="theme-toggle">
+      <input type="checkbox" id="darkToggle">
+      🌙 Dark Mode
+    </label>
 
-    <br><br>
-
-    <div id="aiDifficultyContainer" class="hidden">
-      <label for="aiLevel">Tahap AI:</label>
-      <select id="aiLevel">
-        <option value="easy">🥚 Senang</option>
-        <option value="medium">🍳 Biasa</option>
-        <option value="hard">🔥 Power</option>
+    <div id="setup">
+      <label for="difficulty">Pilih Tahap AI:</label>
+      <select id="difficulty">
+        <option value="easy">Senang (Easy)</option>
+        <option value="medium">Sederhana (Medium)</option>
+        <option value="hard">Susah (Hard)</option>
       </select>
-      <br><br>
+      <button id="startBtn">Mula Game</button>
     </div>
 
-    <label for="player1Emoji">Player 1:</label>
-    <select id="player1Emoji">
-      <option value="🍛">🍛 Nasi Lemak</option>
-      <option value="🫖">🫖 Teh Tarik</option>
-      <option value="🥭">🥭 Durian</option>
-      <option value="🍢">🍢 Satay</option>
-      <option value="🧋">🧋 Milo Ais</option>
-      <option value="🫓">🫓 Roti Canai</option>
-      <option value="🚗">🚗 Myvi</option>
-      <option value="🧅">🧅 Mak Cik Bawang</option>
-    </select>
-
-    <br><br>
-
-    <label for="player2Emoji">Player 2 / AI:</label>
-    <select id="player2Emoji">
-      <option value="🫖">🫖 Teh Tarik</option>
-      <option value="🍛">🍛 Nasi Lemak</option>
-      <option value="🥭">🥭 Durian</option>
-      <option value="🍢">🍢 Satay</option>
-      <option value="🧋">🧋 Milo Ais</option>
-      <option value="🫓">🫓 Roti Canai</option>
-      <option value="🚗">🚗 Myvi</option>
-      <option value="🧅">🧅 Mak Cik Bawang</option>
-    </select>
-
-    <br><br>
-
-    <label for="themePicker">Tema:</label>
-    <select id="themePicker">
-      <option value="normal">☀️ Normal</option>
-      <option value="dark">🌙 Gelap</option>
-    </select>
-
-    <br><br>
-
-    <div class="button-row">
-      <button id="startBtn">Start Game</button>
-      <button id="restartBtn" class="hidden">Restart Game</button>
+    <div id="game" style="display: none;">
+      <div class="board" id="board"></div>
+      <div class="status" id="status">Giliran: 🧋</div>
+      <button id="resetBtn">Main Semula</button>
     </div>
   </div>
 
-  <div id="scoreboard" class="hidden">
-    <h3>🏆 Skor Pemain</h3>
-    <p id="scoreP1">Player 1: 0</p>
-    <p id="scoreP2">Player 2 / AI: 0</p>
-    <p id="scoreDraw">Seri: 0</p>
-  </div>
-
-  <div id="game" class="hidden"></div>
-  <h2 id="statusText"></h2>
-
-  <canvas id="confettiCanvas"></canvas>
-
-  <audio id="winSound" src="win.mp3"></audio>
-  <audio id="drawSound" src="draw.mp3"></audio>
-  <audio id="clickSound" src="click.mp3"></audio>
-
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <script>
-    // Theme switching logic (Normal / Dark)
-    document.getElementById("themePicker").addEventListener("change", function () {
-      document.body.className = this.value === 'dark' ? 'theme-dark' : 'theme-normal';
-    });
-
-    // AI Level visibility
-    document.getElementById("gameMode").addEventListener("change", function () {
-      const aiLevel = document.getElementById("aiDifficultyContainer");
-      aiLevel.classList.toggle("hidden", this.value !== 'ai');
-    });
-  </script>
   <script src="script.js"></script>
 </body>
 </html>
