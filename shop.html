@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kedai Ikon - Tic Tac Teh Tarik</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    .shop {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .icon-card {
+      border: 2px solid #ccc;
+      border-radius: 10px;
+      padding: 10px;
+      transition: 0.3s;
+    }
+    .icon-card:hover {
+      border-color: gold;
+      transform: scale(1.05);
+    }
+    .icon {
+      font-size: 40px;
+    }
+    .coin {
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+    button {
+      margin-top: 10px;
+      padding: 5px 10px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>🛍️ Kedai Ikon</h1>
+  <p class="coin">🪙 Coin Anda: <span id="coinCount">0</span></p>
+  <div class="shop" id="shopContainer"></div>
+
+  <script>
+    let coins = parseInt(localStorage.getItem("coins")) || 0;
+    let selectedIcon = localStorage.getItem("selectedIcon") || "🧋";
+    let iconData = JSON.parse(localStorage.getItem("iconData")) || [
+      { emoji: "🧋", name: "Teh Boba", price: 0, owned: true },
+      { emoji: "🐔", name: "Ayam Goreng", price: 10, owned: false },
+      { emoji: "🍳", name: "Telur", price: 15, owned: false },
+      { emoji: "🥥", name: "Kelapa", price: 20, owned: false },
+      { emoji: "🍟", name: "Kentang", price: 25, owned: false },
+    ];
+
+    function saveData() {
+      localStorage.setItem("coins", coins);
+      localStorage.setItem("selectedIcon", selectedIcon);
+      localStorage.setItem("iconData", JSON.stringify(iconData));
+    }
+
+    function renderShop() {
+      document.getElementById("coinCount").textContent = coins;
+      const shop = document.getElementById("shopContainer");
+      shop.innerHTML = "";
+
+      iconData.forEach((icon, index) => {
+        const card = document.createElement("div");
+        card.className = "icon-card";
+
+        card.innerHTML = `
+          <div class="icon">${icon.emoji}</div>
+          <div><strong>${icon.name}</strong></div>
+        `;
+
+        const btn = document.createElement("button");
+        if (icon.owned) {
+          btn.textContent = icon.emoji === selectedIcon ? "Digunakan" : "Guna";
+          btn.disabled = icon.emoji === selectedIcon;
+          btn.onclick = () => {
+            selectedIcon = icon.emoji;
+            saveData();
+            renderShop();
+          };
+        } else {
+          btn.textContent = `Beli (${icon.price}🪙)`;
+          btn.disabled = coins < icon.price;
+          btn.onclick = () => {
+            if (coins >= icon.price) {
+              coins -= icon.price;
+              icon.owned = true;
+              selectedIcon = icon.emoji;
+              saveData();
+              renderShop();
+            }
+          };
+        }
+
+        card.appendChild(btn);
+        shop.appendChild(card);
+      });
+    }
+
+    renderShop();
+  </script>
+</body>
+</html>
+
