@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laman Utama - Tic Tac Teh Tarik</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: linear-gradient(to bottom right, #fef4e8, #ffd9c0);
+      text-align: center;
+    }
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .coin-display {
+      font-size: 1.2rem;
+      margin-bottom: 1.5rem;
+      color: #333;
+    }
+    .btn-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .menu-btn {
+      padding: 15px 30px;
+      font-size: 1.2rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background-color: #ff914d;
+      color: white;
+      transition: 0.3s;
+    }
+    .menu-btn:hover {
+      background-color: #e07a38;
+    }
+  </style>
+</head>
+<body>
+  <h1>Tic Tac Teh Tarik 🇲🇾</h1>
+  <p class="coin-display">🪙 Coin Anda: <span id="coinCount">0</span></p>
+  <div class="btn-container">
+    <a href="index.html"><button class="menu-btn">🎮 Main Game</button></a>
+    <a href="shop.html"><button class="menu-btn">🛍️ Kedai Ikon</button></a>
+  </div>
+
+  <script>
+    const coin = localStorage.getItem("coins") || 0;
+    document.getElementById("coinCount").textContent = coin;
+  </script>
+</body>
+</html>
